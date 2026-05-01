@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=420" />
+  <title>IG Carousel</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    /* ─── Design Tokens (6-token palette from #6366f1) ─────────────────── */
+    :root {
+      --primary:       #6366f1;   /* brand indigo           */
+      --primary-light: #a5b4fc;   /* tint (300)             */
+      --primary-dark:  #4338ca;   /* shade (700)            */
+      --light-bg:      #F8FAFC;   /* near-white surface     */
+      --dark-bg:       #0F172A;   /* deep navy surface      */
+      --accent:        #f59e0b;   /* amber highlight        */
+
+      /* semantic aliases */
+      --text-dark:  #0F172A;
+      --text-light: #F8FAFC;
+      --muted-dark: rgba(15,23,42,.45);
+      --muted-light: rgba(248,250,252,.55);
+    }
+
+    /* ─── Reset & Base ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 20px 0;
+      background: #cbd5e1;
+      font-family: 'DM Sans', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* ─── Instagram Frame ───────────────────────────────────────────────── */
+    .ig-frame {
+      width: 420px;
+      height: 525px;
+      overflow: hidden;
+      position: relative;
+      border-radius: 4px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.22);
+    }
+
+    /* ─── Carousel Track ────────────────────────────────────────────────── */
+    .carousel-track {
+      display: flex;
+      width: calc(420px * 7);   /* 7 slides */
+      height: 100%;
+      transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ─── Individual Slide ──────────────────────────────────────────────── */
+    .slide {
+      width: 420px;
+      height: 525px;
+      flex-shrink: 0;
+      position: relative;
+      padding: 40px 36px 72px;   /* bottom reserved for progress bar */
+      display: flex;
+      flex-direction: column;
+    }
+    .slide.light { background: var(--light-bg); color: var(--text-dark); }
+    .slide.dark  { background: var(--dark-bg);  color: var(--text-light); }
+    .slide.hero  { justify-content: center; align-items: center; text-align: center; }
+
+    /* ─── Brand Badge ───────────────────────────────────────────────────── */
+    .brand {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 18px;
+      width: fit-content;
+    }
+    .brand.on-light { background: var(--primary); color: #fff; }
+    .brand.on-dark  { background: var(--primary-light); color: var(--dark-bg); }
+
+    /* ─── Typography ────────────────────────────────────────────────────── */
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 34px; font-weight: 800;
+      line-height: 1.1; margin: 0 0 14px;
+    }
+    h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px; font-weight: 700;
+      line-height: 1.15; margin: 0 0 12px;
+    }
+    .overline {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--primary); margin: 0 0 10px;
+    }
+    .overline.on-dark { color: var(--primary-light); }
+    p { font-size: 14px; line-height: 1.6; margin: 0 0 8px; }
+    .body-lg { font-size: 15px; }
+
+    /* ─── Component: Strikethrough Pill ─────────────────────────────────── */
+    .pill-list { list-style: none; margin: 10px 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 7px 14px; border-radius: 99px;
+      font-size: 13px; font-weight: 500; width: fit-content;
+    }
+    .pill.strike {
+      background: rgba(239,68,68,.12);
+      color: #ef4444;
+      text-decoration: line-through;
+      text-decoration-color: #ef4444;
+      text-decoration-thickness: 2px;
+    }
+    .pill.check {
+      background: rgba(99,102,241,.12);
+      color: var(--primary);
+    }
+    .pill.check.on-dark { background: rgba(165,180,252,.15); color: var(--primary-light); }
+    .pill-icon { font-size: 14px; line-height: 1; }
+
+    /* ─── Component: Numbered Steps ─────────────────────────────────────── */
+    .steps { list-style: none; margin: 10px 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+    .step { display: flex; gap: 12px; align-items: flex-start; }
+    .step-num {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--primary); color: #fff;
+      font-size: 12px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 1px;
+    }
+    .step-num.on-dark { background: var(--primary-light); color: var(--dark-bg); }
+    .step-body { display: flex; flex-direction: column; }
+    .step-title { font-size: 14px; font-weight: 700; line-height: 1.2; margin: 0 0 2px; }
+    .step-desc  { font-size: 12px; line-height: 1.5; opacity: .72; margin: 0; }
+
+    /* ─── Component: CTA Button ─────────────────────────────────────────── */
+    .cta-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 13px 28px; border-radius: 99px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px; font-weight: 700; text-decoration: none;
+      cursor: pointer; border: none;
+      transition: opacity .15s;
+    }
+    .cta-btn:hover { opacity: .88; }
+    .cta-btn.primary { background: var(--primary); color: #fff; }
+    .cta-btn.secondary {
+      background: transparent;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+    }
+    .cta-btn.secondary.on-dark {
+      border-color: var(--primary-light);
+      color: var(--primary-light);
+    }
+    .cta-group { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; margin-top: 16px; }
+
+    /* ─── Highlight Span ────────────────────────────────────────────────── */
+    .hl { color: var(--primary); }
+    .hl.on-dark { color: var(--primary-light); }
+
+    /* ─── Decorative Blob ────────────────────────────────────────────────── */
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      opacity: .18;
+      pointer-events: none;
+    }
+
+    /* ─── Progress Bar ───────────────────────────────────────────────────── */
+    .progress-container {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 14px 28px 18px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .progress-container.on-dark .prog-track { background: rgba(248,250,252,.18); }
+    .progress-container.on-dark .counter    { color: rgba(248,250,252,.7); }
+    .prog-track {
+      flex: 1; height: 3px;
+      background: rgba(15,23,42,.12);
+      border-radius: 2px; overflow: hidden;
+    }
+    .prog-fill { height: 100%; background: var(--primary); border-radius: 2px; transition: width .3s; }
+    .counter { font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--muted-dark); white-space: nowrap; }
+
+    /* ─── Swipe Arrow ────────────────────────────────────────────────────── */
+    .arrow {
+      position: absolute; top: 50%; right: 14px;
+      transform: translateY(-50%);
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(99,102,241,.15);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; color: var(--primary);
+      transition: background .2s;
+      z-index: 10;
+    }
+    .arrow:hover { background: rgba(99,102,241,.28); }
+    .arrow.on-dark { background: rgba(165,180,252,.15); color: var(--primary-light); }
+    .arrow.on-dark:hover { background: rgba(165,180,252,.28); }
+
+    /* ─── Feature Card ───────────────────────────────────────────────────── */
+    .feature-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+    .feature-card {
+      display: flex; gap: 12px; align-items: center;
+      padding: 10px 14px; border-radius: 12px;
+      background: rgba(99,102,241,.08);
+    }
+    .feature-card.on-dark { background: rgba(165,180,252,.08); }
+    .feature-icon { font-size: 20px; line-height: 1; }
+    .feature-text { display: flex; flex-direction: column; }
+    .feature-title { font-size: 13px; font-weight: 700; margin: 0 0 1px; }
+    .feature-desc  { font-size: 12px; opacity: .65; margin: 0; }
+
+    /* ─── Stat Block ─────────────────────────────────────────────────────── */
+    .stat-grid { display: flex; gap: 10px; margin-top: 10px; }
+    .stat-card {
+      flex: 1; border-radius: 14px; padding: 14px 10px;
+      background: rgba(99,102,241,.09);
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+    }
+    .stat-card.on-dark { background: rgba(165,180,252,.1); }
+    .stat-num { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 800; color: var(--primary); line-height: 1; }
+    .stat-num.on-dark { color: var(--primary-light); }
+    .stat-label { font-size: 11px; font-weight: 500; opacity: .7; margin-top: 4px; }
+
+    /* ─── Nav Controls (below frame) ────────────────────────────────────── */
+    .controls { display: flex; gap: 12px; }
+    .nav-btn {
+      padding: 8px 20px; border-radius: 99px;
+      background: #fff; border: 1.5px solid #e2e8f0;
+      font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700;
+      cursor: pointer; color: var(--text-dark);
+      transition: background .15s, border-color .15s;
+    }
+    .nav-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .slide-counter { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #64748b; display: flex; align-items: center; }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ CAROUSEL FRAME ══════════════════════════ -->
+<div class="ig-frame">
+  <div class="carousel-track" id="track">
+
+    <!-- ─── SLIDE 1 — Hero (Light) ─────────────────────────────────────── -->
+    <div class="slide light hero">
+      <!-- decorative blobs -->
+      <div class="blob" style="width:260px;height:260px;background:var(--primary);top:-60px;right:-70px;"></div>
+      <div class="blob" style="width:180px;height:180px;background:var(--accent);bottom:-40px;left:-40px;"></div>
+
+      <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;">
+        <span class="brand on-light">✦ AI Automation</span>
+        <h1 style="font-size:36px;">Scale Your Agency<br>with <span class="hl">n8n</span></h1>
+        <p class="body-lg" style="max-width:300px;opacity:.7;">
+          The step-by-step playbook for web developers who want to automate client work and grow faster.
+        </p>
+        <div style="margin-top:18px;display:flex;gap:6px;align-items:center;">
+          <span style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.5;">Swipe to start</span>
+          <span style="font-size:14px;opacity:.5;">→</span>
+        </div>
+      </div>
+
+      <div class="progress-container">
+        <div class="prog-track"><div class="prog-fill" style="width:14.28%"></div></div>
+        <span class="counter">1 / 7</span>
+      </div>
+      <button class="arrow" onclick="navigate(1)" aria-label="Next slide">›</button>
+    </div>
+
+    <!-- ─── SLIDE 2 — The Problem (Dark) ──────────────────────────────── -->
+    <div class="slide dark">
+      <div class="blob" style="width:200px;height:200px;background:var(--primary-dark);top:-50px;left:-50px;"></div>
+
+      <div style="position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;">
+        <p class="overline on-dark">The Problem</p>
+        <h2>You're trading time<br>for <span class="hl on-dark">money</span>. Again.</h2>
+        <p style="opacity:.7;margin-bottom:14px;">Sound familiar? Most agencies are stuck repeating the same manual tasks every week.</p>
+
+        <!-- Strikethrough Pills Component -->
+        <ul class="pill-list">
+          <li><span class="pill strike"><span class="pill-icon">✕</span>Copy-pasting client reports manually</span></li>
+          <li><span class="pill strike"><span class="pill-icon">✕</span>Sending invoices one by one</span></li>
+          <li><span class="pill strike"><span class="pill-icon">✕</span>Chasing leads in your DMs</span></li>
+          <li><span class="pill strike"><span class="pill-icon">✕</span>Late-night deadline scrambles</span></li>
+        </ul>
+      </div>
+
+      <div class="progress-container on-dark">
+        <div class="prog-track"><div class="prog-fill" style="width:28.57%"></div></div>
+        <span class="counter">2 / 7</span>
+      </div>
+      <button class="arrow on-dark" onclick="navigate(1)" aria-label="Next slide">›</button>
+    </div>
+
+    <!-- ─── SLIDE 3 — The Solution (Light) ────────────────────────────── -->
+    <div class="slide light">
+      <div class="blob" style="width:220px;height:220px;background:var(--primary);bottom:-60px;right:-60px;"></div>
+
+      <div style="position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;">
+        <p class="overline">The Solution</p>
+        <h2>Automate the boring.<br>Focus on <span class="hl">growth</span>.</h2>
+
+        <!-- Check Pills Component -->
+        <ul class="pill-list" style="margin-top:12px;">
+          <li><span class="pill check"><span class="pill-icon">✓</span>Auto-generate client reports</span></li>
+          <li><span class="pill check"><span class="pill-icon">✓</span>Triggered invoice & follow-up emails</span></li>
+          <li><span class="pill check"><span class="pill-icon">✓</span>Lead capture → CRM in seconds</span></li>
+          <li><span class="pill check"><span class="pill-icon">✓</span>24/7 workflows — zero babysitting</span></li>
+        </ul>
+
+        <p style="margin-top:14px;font-size:13px;opacity:.6;">All powered by <strong>n8n</strong> — free, self-hosted, no vendor lock-in.</p>
+      </div>
+
+      <div class="progress-container">
+        <div class="prog-track"><div class="prog-fill" style="width:42.86%"></div></div>
+        <span class="counter">3 / 7</span>
+      </div>
+      <button class="arrow" onclick="navigate(1)" aria-label="Next slide">›</button>
+    </div>
+
+    <!-- ─── SLIDE 4 — How It Works (Dark) ─────────────────────────────── -->
+    <div class="slide dark">
+      <div class="blob" style="width:160px;height:160px;background:var(--accent);bottom:-30px;right:-30px;opacity:.12;"></div>
+
+      <div style="position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;">
+        <p class="overline on-dark">How It Works</p>
+        <h2>Set up in <span class="hl on-dark">3 Steps</span></h2>
+
+        <!-- Numbered Steps Component -->
+        <ol class="steps" style="margin-top:14px;">
+          <li class="step">
+            <div class="step-num on-dark">1</div>
+            <div class="step-body">
+              <span class="step-title">Install n8n (5 min)</span>
+              <span class="step-desc">Self-host on Railway or use n8n.cloud — no DevOps degree needed.</span>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num on-dark">2</div>
+            <div class="step-body">
+              <span class="step-title">Choose your first workflow</span>
+              <span class="step-desc">Start with "Lead → Email" or "Form → Notion" — simple wins first.</span>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num on-dark">3</div>
+            <div class="step-body">
+              <span class="step-title">Duplicate &amp; scale</span>
+              <span class="step-desc">Copy your best workflow to every client. Hours saved per week, instantly.</span>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <div class="progress-container on-dark">
+        <div class="prog-track"><div class="prog-fill" style="width:57.14%"></div></div>
+        <span class="counter">4 / 7</span>
+      </div>
+      <button class="arrow on-dark" onclick="navigate(1)" aria-label="Next slide">›</button>
+    </div>
+
+    <!-- ─── SLIDE 5 — Features (Light) ────────────────────────────────── -->
+    <div class="slide light">
+      <div class="blob" style="width:240px;height:240px;background:var(--primary);top:-80px;left:-80px;"></div>
+
+      <div style="position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;">
+        <p class="overline">Key Features</p>
+        <h2>Everything you <span class="hl">need</span></h2>
+
+        <div class="feature-grid" style="margin-top:12px;">
+          <div class="feature-card">
+            <span class="feature-icon">⚡</span>
+            <div class="feature-text">
+              <span class="feature-title">Visual Workflow Builder</span>
+              <span class="feature-desc">Drag-and-drop nodes — no code required.</span>
+            </div>
+          </div>
+          <div class="feature-card">
+            <span class="feature-icon">🔗</span>
+            <div class="feature-text">
+              <span class="feature-title">400+ Integrations</span>
+              <span class="feature-desc">Slack, Notion, Stripe, Airtable &amp; more.</span>
+            </div>
+          </div>
+          <div class="feature-card">
+            <span class="feature-icon">🔒</span>
+            <div class="feature-text">
+              <span class="feature-title">Self-Hosted &amp; Secure</span>
+              <span class="feature-desc">Your data stays on your server. Always.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="progress-container">
+        <div class="prog-track"><div class="prog-fill" style="width:71.43%"></div></div>
+        <span class="counter">5 / 7</span>
+      </div>
+      <button class="arrow" onclick="navigate(1)" aria-label="Next slide">›</button>
+    </div>
+
+    <!-- ─── SLIDE 6 — Social Proof (Dark) ─────────────────────────────── -->
+    <div class="slide dark">
+      <div class="blob" style="width:200px;height:200px;background:var(--primary);top:-50px;right:-50px;"></div>
+
+      <div style="position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;">
+        <p class="overline on-dark">Results</p>
+        <h2>Real numbers.<br><span class="hl on-dark">Real impact.</span></h2>
+
+        <div class="stat-grid">
+          <div class="stat-card on-dark">
+            <span class="stat-num on-dark">12h</span>
+            <span class="stat-label">saved per week on average</span>
+          </div>
+          <div class="stat-card on-dark">
+            <span class="stat-num on-dark">3×</span>
+            <span class="stat-label">faster client onboarding</span>
+          </div>
+        </div>
+        <div class="stat-grid" style="margin-top:0;">
+          <div class="stat-card on-dark" style="flex:none;width:100%;">
+            <span class="stat-num on-dark">$0</span>
+            <span class="stat-label">licensing fees with self-hosted n8n</span>
+          </div>
+        </div>
+
+        <p style="font-size:12px;opacity:.55;margin-top:12px;font-style:italic;">
+          "We automated our entire reporting pipeline in a weekend." — Alex T., Agency Owner
+        </p>
+      </div>
+
+      <div class="progress-container on-dark">
+        <div class="prog-track"><div class="prog-fill" style="width:85.71%"></div></div>
+        <span class="counter">6 / 7</span>
+      </div>
+      <button class="arrow on-dark" onclick="navigate(1)" aria-label="Next slide">›</button>
+    </div>
+
+    <!-- ─── SLIDE 7 — CTA (Light) ──────────────────────────────────────── -->
+    <div class="slide light hero">
+      <div class="blob" style="width:280px;height:280px;background:var(--primary);top:-80px;right:-80px;"></div>
+      <div class="blob" style="width:160px;height:160px;background:var(--accent);bottom:-30px;left:-30px;"></div>
+
+      <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:0;">
+        <span class="brand on-light">✦ Free Guide</span>
+        <h2 style="text-align:center;font-size:28px;">Ready to automate<br>your agency?</h2>
+        <p style="text-align:center;opacity:.7;max-width:280px;margin-bottom:0;">
+          Get the full n8n workflow library — 20 done-for-you templates, free.
+        </p>
+
+        <!-- CTA Buttons Component -->
+        <div class="cta-group" style="align-items:center;margin-top:20px;">
+          <a href="#" class="cta-btn primary">🚀 Download Free Templates</a>
+          <a href="#" class="cta-btn secondary">Learn more at my link in bio</a>
+        </div>
+
+        <p style="font-size:11px;opacity:.45;margin-top:16px;text-align:center;">
+          No email required · Instant download
+        </p>
+      </div>
+
+      <div class="progress-container">
+        <div class="prog-track"><div class="prog-fill" style="width:100%"></div></div>
+        <span class="counter">7 / 7</span>
+      </div>
+      <!-- No arrow on last slide -->
+    </div>
+
+  </div><!-- /carousel-track -->
+</div><!-- /ig-frame -->
+
+<!-- ─── External Navigation Controls ────────────────────────────────────── -->
+<div class="controls">
+  <button class="nav-btn" id="btnPrev" onclick="navigate(-1)" disabled>← Prev</button>
+  <span class="slide-counter" id="slideCounter">Slide 1 of 7</span>
+  <button class="nav-btn" id="btnNext" onclick="navigate(1)">Next →</button>
+</div>
+
+<!-- ─── Navigation Script ─────────────────────────────────────────────────── -->
+<script>
+  const TOTAL = 7;
+  let current = 0;
+
+  function navigate(dir) {
+    current = Math.max(0, Math.min(TOTAL - 1, current + dir));
+    const track = document.getElementById('track');
+    track.style.transform = `translateX(${-current * 420}px)`;
+    document.getElementById('slideCounter').textContent = `Slide ${current + 1} of ${TOTAL}`;
+    document.getElementById('btnPrev').disabled = current === 0;
+    document.getElementById('btnNext').disabled = current === TOTAL - 1;
+  }
+
+  // Keyboard navigation
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') navigate(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   navigate(-1);
+  });
+
+  // Initialize button states
+  navigate(0);
+</script>
+
+</body>
+</html>

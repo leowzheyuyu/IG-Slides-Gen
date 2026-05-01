@@ -1,0 +1,9 @@
+# Generated slide exports — run export_slides.py to reproduce
+slides/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
